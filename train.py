@@ -11,6 +11,8 @@
 from configs.configure import *
 
 ''' Generates a new ngram-object via init, count, prob, (save) '''
+
+
 def worker(data):
     "This data was received by the process:"
     length = data[0]
@@ -20,7 +22,7 @@ def worker(data):
         "name": ("NGramCreator, Session: {}, Length: {}, Progress bar: {}".format(CONFIG.NAME, length, progress_bar)),
         "alphabet": CONFIG.ALPHABET,
         "ngram_size": CONFIG.NGRAM_SIZE,
-        "training_file": "input/"+CONFIG.TRAINING_FILE,
+        "training_file": "input/" + CONFIG.TRAINING_FILE,
         "length": length,
         "progress_bar": progress_bar
     })
@@ -70,7 +72,10 @@ def worker(data):
 
     logging.debug("Training EP done ...")
 
+
 ''' Manages the training '''
+
+
 def train():
     try:
         logging.debug("Training started ...")
@@ -81,24 +86,25 @@ def train():
             worker(data)
         '''
 
-        #''' Multiprocessing
+        # ''' Multiprocessing
         data = []
         for length in CONFIG.LENGTHS:
             data.append([length, CONFIG.PROGRESS_BAR])
         pool = multiprocessing.Pool(processes=CONFIG.NO_CPUS)
         pool.map(worker, data)
-        pool.close() # no more tasks can be submitted to the pool
-        pool.join() # wait for the worker processes to exit
-        #'''
+        pool.close()  # no more tasks can be submitted to the pool
+        pool.join()  # wait for the worker processes to exit
+        # '''
 
     except Exception as e:
         sys.stderr.write("\x1b[1;%dm" % (31) + "Training failed: {}\n".format(e) + "\x1b[0m")
         sys.exit(1)
 
+
 def main():
     try:
         global CONFIG
-        CONFIG = Configure({"name":"My Config"})
+        CONFIG = Configure({"name": "My Config"})
         train()
     except KeyboardInterrupt:
         print('User canceled')
@@ -106,6 +112,7 @@ def main():
     except Exception as e:
         sys.stderr.write("\x1b[1;%dm" % (31) + "Error: {}\n".format(e) + "\x1b[0m")
         sys.exit(1)
+
 
 if __name__ == '__main__':
     print("{0}: {1:%Y-%m-%d %H:%M:%S}\n".format("Start", datetime.datetime.now()))
