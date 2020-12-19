@@ -73,9 +73,6 @@ def worker(data):
     logging.debug("Training EP done ...")
 
 
-''' Manages the training '''
-
-
 def train():
     """
     在自己的电脑上要用singleprocessing,实验室的电脑上运行multiprocessing
