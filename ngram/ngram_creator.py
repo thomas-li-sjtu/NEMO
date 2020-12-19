@@ -7,45 +7,44 @@
 :version: 0.7.1, 2019-07-11
 """
 
-# External modules
 from collections import OrderedDict  # storing the alphabet
 import os  # load and save / file handling
 import umsgpack  # load and save # pip install u-msgpack-python
 import math  # only pow
-import logging  # logging debug infos
-from rainbow_logging_handler import RainbowLoggingHandler  # pip install rainbow_logging_handler
-from tqdm import tqdm  # progress bar while reading the file # pip install tqdm
+import logging  # logging debug info
+# from rainbow_logging_handler import RainbowLoggingHandler  # pip install rainbow_logging_handler
+from tqdm import tqdm  # progress bar while reading the file
 import datetime
 
 
 class NGramCreator:
 
-    def __init__(self, dict):
-        self.name = dict['name']
+    def __init__(self, init_dict):
+        self.name = init_dict['name']
         logging.debug("Constructor started for '{}'".format(self.name))
-        self.alphabet = dict['alphabet']
+        self.alphabet = init_dict['alphabet']
         self.alphabet_len = len(self.alphabet)
-        self.alphabet_dict = OrderedDict.fromkeys(self.alphabet)  # a 0, b 1, c 2
+        self.alphabet_dict = OrderedDict.fromkeys(self.alphabet)  # 返回一个字典:{a:None, b:None, c:None}
         i = 0
-        for char in self.alphabet_dict:
+        for char in self.alphabet_dict:  # 为字典的键配一个值:{a:0, b:1, c:2}
             self.alphabet_dict[char] = i
             i += 1
         self.alphabet_list = list(self.alphabet)
         logging.debug("Used alphabet: {}".format(self.alphabet))
-        self.length = dict['length']
+        self.length = init_dict['length']
         logging.debug("Model string length: {}".format(self.length))
-        self.ngram_size = dict['ngram_size']
-        assert self.ngram_size >= 2, "n-gram size < 2 does not make any sense! Your configured n-gram size is {}".format(
-            self.ngram_size)
+        self.ngram_size = init_dict['ngram_size']
+        assert self.ngram_size >= 2, "n-gram size < 2 does not make any sense! Your configured" \
+                                     " n-gram size is {}".format(self.ngram_size)  # 为assert添加备注
         logging.debug("NGram size: {}".format(self.ngram_size))
-        self.training_file = dict['training_file']
+        self.training_file = init_dict['training_file']
         self.training_file_lines = sum(1 for line in open(self.training_file))
-        self.disable_progress = False if dict['progress_bar'] else True
+        self.disable_progress = False if init_dict['progress_bar'] else True
         self.ip_list = []
         self.cp_list = []
         self.ep_list = []
         self.no_ip_ngrams = int(math.pow(self.alphabet_len, (self.ngram_size - 1)))
-        self.no_cp_ngrams = int(math.pow(self.alphabet_len, (self.ngram_size)))
+        self.no_cp_ngrams = int(math.pow(self.alphabet_len, self.ngram_size))
         self.no_ep_ngrams = self.no_ip_ngrams  # save one exponentiation :-P
         logging.debug("len(IP) theo: {}".format(self.no_ip_ngrams))
         logging.debug("len(CP) theo: {} => {} * {}".format(self.no_cp_ngrams,
@@ -63,7 +62,7 @@ class NGramCreator:
 
     def _is_in_alphabet(self, string):
         for char in string:
-            if not char in self.alphabet:
+            if char not in self.alphabet:
                 return False
         return True
 
@@ -74,25 +73,25 @@ class NGramCreator:
 
     ########################################################################################################################
 
-    # ngram-to-intial-prob-index
+    # ngram-to-initial-prob-index
     def _n2iIP(self, ngram):
         ngram = list(ngram)
         if self.ngram_size == 5:
             return (self.alphabet_len ** 0 * self.alphabet_dict[ngram[3]]) + (
-                        self.alphabet_len ** 1 * self.alphabet_dict[ngram[2]]) + (
-                               self.alphabet_len ** 2 * self.alphabet_dict[ngram[1]]) + (
-                               self.alphabet_len ** 3 * self.alphabet_dict[ngram[0]])
+                    self.alphabet_len ** 1 * self.alphabet_dict[ngram[2]]) + (
+                           self.alphabet_len ** 2 * self.alphabet_dict[ngram[1]]) + (
+                           self.alphabet_len ** 3 * self.alphabet_dict[ngram[0]])
         if self.ngram_size == 4:
             return (self.alphabet_len ** 0 * self.alphabet_dict[ngram[2]]) + (
-                        self.alphabet_len ** 1 * self.alphabet_dict[ngram[1]]) + (
-                               self.alphabet_len ** 2 * self.alphabet_dict[ngram[0]])
+                    self.alphabet_len ** 1 * self.alphabet_dict[ngram[1]]) + (
+                           self.alphabet_len ** 2 * self.alphabet_dict[ngram[0]])
         if self.ngram_size == 3:
             return (self.alphabet_len ** 0 * self.alphabet_dict[ngram[1]]) + (
-                        self.alphabet_len ** 1 * self.alphabet_dict[ngram[0]])
+                    self.alphabet_len ** 1 * self.alphabet_dict[ngram[0]])
         if self.ngram_size == 2:
-            return (self.alphabet_len ** 0 * self.alphabet_dict[ngram[0]])
+            return self.alphabet_len ** 0 * self.alphabet_dict[ngram[0]]
 
-    # intial-prob-index-to-ngram
+    # initial-prob-index-to-ngram
     def _i2nIP(self, index):
         if self.ngram_size == 5:
             third, fourth = divmod(index, self.alphabet_len)
@@ -115,22 +114,22 @@ class NGramCreator:
         ngram = list(ngram)
         if self.ngram_size == 5:
             return (self.alphabet_len ** 0 * self.alphabet_dict[ngram[4]]) + (
-                        self.alphabet_len ** 1 * self.alphabet_dict[ngram[3]]) + (
-                               self.alphabet_len ** 2 * self.alphabet_dict[ngram[2]]) + (
-                               self.alphabet_len ** 3 * self.alphabet_dict[ngram[1]]) + (
-                               self.alphabet_len ** 4 * self.alphabet_dict[ngram[0]])
+                    self.alphabet_len ** 1 * self.alphabet_dict[ngram[3]]) + (
+                           self.alphabet_len ** 2 * self.alphabet_dict[ngram[2]]) + (
+                           self.alphabet_len ** 3 * self.alphabet_dict[ngram[1]]) + (
+                           self.alphabet_len ** 4 * self.alphabet_dict[ngram[0]])
         if self.ngram_size == 4:
             return (self.alphabet_len ** 0 * self.alphabet_dict[ngram[3]]) + (
-                        self.alphabet_len ** 1 * self.alphabet_dict[ngram[2]]) + (
-                               self.alphabet_len ** 2 * self.alphabet_dict[ngram[1]]) + (
-                               self.alphabet_len ** 3 * self.alphabet_dict[ngram[0]])
+                    self.alphabet_len ** 1 * self.alphabet_dict[ngram[2]]) + (
+                           self.alphabet_len ** 2 * self.alphabet_dict[ngram[1]]) + (
+                           self.alphabet_len ** 3 * self.alphabet_dict[ngram[0]])
         if self.ngram_size == 3:
             return (self.alphabet_len ** 0 * self.alphabet_dict[ngram[2]]) + (
-                        self.alphabet_len ** 1 * self.alphabet_dict[ngram[1]]) + (
-                               self.alphabet_len ** 2 * self.alphabet_dict[ngram[0]])
+                    self.alphabet_len ** 1 * self.alphabet_dict[ngram[1]]) + (
+                           self.alphabet_len ** 2 * self.alphabet_dict[ngram[0]])
         if self.ngram_size == 2:
             return (self.alphabet_len ** 0 * self.alphabet_dict[ngram[1]]) + (
-                        self.alphabet_len ** 1 * self.alphabet_dict[ngram[0]])
+                    self.alphabet_len ** 1 * self.alphabet_dict[ngram[0]])
 
     # conditial-prob-index-to-ngram
     def _i2nCP(self, index):
