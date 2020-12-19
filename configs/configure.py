@@ -20,27 +20,31 @@ from ngram.ngram_creator import *
 mtlog = MultiProcessingLog('foo.log', 'a', 0, 0)
 logger = logging.getLogger()
 logger.addHandler(mtlog)
-logger.setLevel(logging.DEBUG) # DEBUG, INFO, CRITICAL
-logger = multiprocessing.log_to_stderr(logging.INFO) # DEBUG, INFO, CRITICAL
+logger.setLevel(logging.DEBUG)  # DEBUG, INFO, CRITICAL
+logger = multiprocessing.log_to_stderr(logging.INFO)  # DEBUG, INFO, CRITICAL
+
 
 class Configure:
-
     def __init__(self, dict):
         self.name = dict['name']
         logging.debug("Constructor started for '{}'".format(self.name))
         self._read_config()
-        self.EVAL_FILE
+        self.EVAL_FILE = None
 
     def _read_config(self):
+        """
+        读入配置json文件并初始化
+        """
         try:
             with open('./configs/dev.json', 'r') as configfile:
-                config = json.load(configfile)
-                # Those DEFAULTS are used, if the config file is malformed
+                config = json.load(configfile)  # dict
+                # Those DEFAULTS are used, if the config file is malformed  如果指定键的值不存在，返回该默认值
                 self.NAME = config.get("name", "Demo")
+                print(self.NAME)
                 self.EVAL_FILE = config.get("eval_file", "eval.txt")
                 self.TRAINING_FILE = config.get("training_file", "training.txt")
                 self.ALPHABET = config.get("alphabet", "abcdefghijklmnopqrstuvwxyz")
-                self.LENGTHS = config.get("lengths", [6,8])
+                self.LENGTHS = config.get("lengths", [6, 8])
                 self.NGRAM_SIZE = config.get("ngram_size", 3)
                 self.NO_CPUS = config.get("no_cpus", 8)
                 self.PROGRESS_BAR = config.get("progress_bar", False)

@@ -1,11 +1,11 @@
 #!/usr/bin/env pypy
 # -*- coding: utf-8 -*-
 
-''' This script manages the training
+""" This script manages the training
 :author: Maximilian Golla
 :contact: maximilian.golla@rub.de
 :version: 0.7.1, 2019-07-11
-'''
+"""
 
 # Load external modules
 from configs.configure import *
@@ -14,7 +14,7 @@ from configs.configure import *
 
 
 def worker(data):
-    "This data was received by the process:"
+    """This data was received by the process:"""
     length = data[0]
     progress_bar = data[1]
 
@@ -77,16 +77,19 @@ def worker(data):
 
 
 def train():
+    """
+    在自己的电脑上要用singleprocessing,实验室的电脑上运行multiprocessing
+    """
     try:
         logging.debug("Training started ...")
 
-        ''' Singleprocessing
+        # ''' Singleprocessing
         for length in CONFIG.LENGTHS:
             data = [length, CONFIG.PROGRESS_BAR]
             worker(data)
-        '''
+        # '''
 
-        # ''' Multiprocessing
+        ''' Multiprocessing
         data = []
         for length in CONFIG.LENGTHS:
             data.append([length, CONFIG.PROGRESS_BAR])
@@ -94,7 +97,7 @@ def train():
         pool.map(worker, data)
         pool.close()  # no more tasks can be submitted to the pool
         pool.join()  # wait for the worker processes to exit
-        # '''
+        '''
 
     except Exception as e:
         sys.stderr.write("\x1b[1;%dm" % (31) + "Training failed: {}\n".format(e) + "\x1b[0m")
@@ -102,6 +105,9 @@ def train():
 
 
 def main():
+    """
+    载入config,并训练
+    """
     try:
         global CONFIG
         CONFIG = Configure({"name": "My Config"})
